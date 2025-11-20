@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String
+  email    String  @unique
+  password String
+  role_id  Int
+  role     Role    @relation(fields: [role_id], references: [id])
+  exams    Exam[]
+  attempts ExamAttempt[]
+  questions Question[] @relation("CreatedQuestions")
+}
+
+model Cycle {
+  id    Int     @id @default(autoincrement())
+  name  String
+  exams Exam[]
+}
+
+model Category {
+  id      Int     @id @default(autoincrement())
+  name    String
+  min_age Int
+  max_age Int
+  questions Question[]
+}
+
+model Exam {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  created_by  Int
+  cycle_id    Int?
+  creator     User      @relation(fields: [created_by], references: [id])
+  cycle       Cycle?    @relation(fields: [cycle_id], references: [id])
+  questions   Question[]
+  attempts    ExamAttempt[]
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  exam_id   Int
+  created_by Int
+  category_id Int
+  title     String
+  type      String      // multiple, short_text, numeric, image, audio
+  difficulty String      // facil, medio, dificil
+  status     String      // draft, editing, published
+  explanation String?    // explicación de la solución
+  image_url  String?
+  audio_url  String?
+
+  exam      Exam     @relation(fields: [exam_id], references: [id])
+  category  Category @relation(fields: [category_id], references: [id])
+  creator   User     @relation("CreatedQuestions", fields: [created_by], references: [id])
+
+  options   QuestionOption[]
+  answers   UserAnswer[]
+}
+
+model QuestionOption {
+  id           Int      @id @default(autoincrement())
+  question_id  Int
+  text         String?
+  is_correct   Boolean @default(false)
+  image_url    String?
+
+  question Question @relation(fields: [question_id], references: [id])
+  answers  UserAnswer[]
+}
+
+model ExamAttempt {
+  id          Int       @id @default(autoincrement())
+  exam_id     Int
+  user_id     Int
+  started_at  DateTime @default(now())
+  finished_at DateTime?
+  score       Float?
+
+  exam      Exam      @relation(fields: [exam_id], references: [id])
+  user      User      @relation(fields: [user_id], references: [id])
+  answers   UserAnswer[]
+}
+
+model UserAnswer {
+  id                Int             @id @default(autoincrement())
+  attempt_id        Int
+  question_id       Int
+  selected_option_id Int?
+  answer_text       String?
+  numeric_answer    Float?
+  is_correct        Boolean?
+
+  attempt           ExamAttempt     @relation(fields: [attempt_id], references: [id])
+  question          Question        @relation(fields: [question_id], references: [id])
+  option            QuestionOption? @relation(fields: [selected_option_id], references: [id])
+}
