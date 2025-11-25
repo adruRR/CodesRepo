@@ -4,106 +4,155 @@ generator client {
 
 datasource db {
   provider = "mysql"
-}
-model Role {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  users User[]
+  url = env("DATABASE_URL")
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  name     String
-  email    String  @unique
-  password String
-  role_id  Int
-  role     Role    @relation(fields: [role_id], references: [id])
-  exams    Exam[]
-  attempts ExamAttempt[]
-  questions Question[] @relation("CreatedQuestions")
+model Rol {
+  id       Int       @id @default(autoincrement()) @map("id")
+  nombre   String    @unique @map("nombre")
+  usuarios Usuario[]
+
+  @@map("roles")
 }
 
-model Cycle {
-  id    Int     @id @default(autoincrement())
-  name  String
-  exams Exam[]
+model Usuario {
+  id         Int           @id @default(autoincrement()) @map("id")
+  nombre     String        @map("nombre")
+  correo     String        @unique @map("correo")
+  contrasena String        @map("contrasena")
+
+  rol_id  Int @map("rol_id")
+  rol     Rol @relation(fields: [rol_id], references: [id])
+
+  examenes   Examen[]
+  intentos   IntentoExamen[]
+  preguntas  Pregunta[] @relation("PreguntasCreadas")
+
+  @@map("usuarios")
 }
 
-model Category {
-  id      Int     @id @default(autoincrement())
-  name    String
-  min_age Int
-  max_age Int
-  questions Question[]
+model Ciclo {
+  id       Int      @id @default(autoincrement()) @map("id")
+  nombre   String   @map("nombre")
+  examenes Examen[]
+
+  @@map("ciclos")
 }
 
-model Exam {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?
-  created_by  Int
-  cycle_id    Int?
-  creator     User      @relation(fields: [created_by], references: [id])
-  cycle       Cycle?    @relation(fields: [cycle_id], references: [id])
-  questions   Question[]
-  attempts    ExamAttempt[]
+model Dificultad {
+  id         Int          @id @default(autoincrement()) @map("id")
+  nombre     String       @unique @map("nombre")
+  categorias Categoria[]
+
+  @@map("dificultades")
 }
 
-model Question {
-  id        Int      @id @default(autoincrement())
-  exam_id   Int
-  created_by Int
-  category_id Int
-  title     String
-  type      String      // multiple, short_text, numeric, image, audio
-  difficulty String      // facil, medio, dificil
-  status     String      // draft, editing, published
-  explanation String?    // explicación de la solución
-  image_url  String?
-  audio_url  String?
+model Categoria {
+  id            Int          @id @default(autoincrement()) @map("id")
+  nombre        String       @map("nombre")
+  edad_min      Int          @map("edad_min")
+  edad_max      Int          @map("edad_max")
 
-  exam      Exam     @relation(fields: [exam_id], references: [id])
-  category  Category @relation(fields: [category_id], references: [id])
-  creator   User     @relation("CreatedQuestions", fields: [created_by], references: [id])
+  dificultad_id Int          @map("dificultad_id")
+  dificultad    Dificultad   @relation(fields: [dificultad_id], references: [id])
 
-  options   QuestionOption[]
-  answers   UserAnswer[]
+  preguntas     Pregunta[]
+
+  @@map("categorias")
 }
 
-model QuestionOption {
-  id           Int      @id @default(autoincrement())
-  question_id  Int
-  text         String?
-  is_correct   Boolean @default(false)
-  image_url    String?
+model Examen {
+  id           Int          @id @default(autoincrement()) @map("id")
+  titulo       String       @map("titulo")
+  descripcion  String?      @map("descripcion")
 
-  question Question @relation(fields: [question_id], references: [id])
-  answers  UserAnswer[]
+  creado_por   Int          @map("creado_por")
+  creador      Usuario      @relation(fields: [creado_por], references: [id])
+
+  ciclo_id     Int?         @map("ciclo_id")
+  ciclo        Ciclo?       @relation(fields: [ciclo_id], references: [id])
+
+  preguntas    Pregunta[]
+  intentos     IntentoExamen[]
+
+  @@map("examenes")
 }
 
-model ExamAttempt {
-  id          Int       @id @default(autoincrement())
-  exam_id     Int
-  user_id     Int
-  started_at  DateTime @default(now())
-  finished_at DateTime?
-  score       Float?
+model Pregunta {
+  id            Int       @id @default(autoincrement()) @map("id")
 
-  exam      Exam      @relation(fields: [exam_id], references: [id])
-  user      User      @relation(fields: [user_id], references: [id])
-  answers   UserAnswer[]
+  examen_id     Int       @map("examen_id")
+  examen        Examen    @relation(fields: [examen_id], references: [id])
+
+  creada_por    Int       @map("creada_por")
+  creador       Usuario   @relation("PreguntasCreadas", fields: [creada_por], references: [id])
+
+  categoria_id  Int       @map("categoria_id")
+  categoria     Categoria @relation(fields: [categoria_id], references: [id])
+
+  titulo        String    @map("titulo")
+  tipo          String    @map("tipo")        // multiple, texto_corto, numerica, imagen, audio
+  dificultad    String    @map("dificultad")  // facil, medio, dificil
+  estado        String    @map("estado")      // borrador, editando, publicado
+
+  explicacion   String?   @map("explicacion")
+  imagen_url    String?   @map("imagen_url")
+  audio_url     String?   @map("audio_url")
+
+  opciones      OpcionPregunta[]
+  respuestas    RespuestaUsuario[]
+
+  @@map("preguntas")
 }
 
-model UserAnswer {
-  id                Int             @id @default(autoincrement())
-  attempt_id        Int
-  question_id       Int
-  selected_option_id Int?
-  answer_text       String?
-  numeric_answer    Float?
-  is_correct        Boolean?
+model OpcionPregunta {
+  id           Int       @id @default(autoincrement()) @map("id")
 
-  attempt           ExamAttempt     @relation(fields: [attempt_id], references: [id])
-  question          Question        @relation(fields: [question_id], references: [id])
-  option            QuestionOption? @relation(fields: [selected_option_id], references: [id])
+  pregunta_id  Int       @map("pregunta_id")
+  pregunta     Pregunta  @relation(fields: [pregunta_id], references: [id])
+
+  texto        String?   @map("texto")
+  es_correcta  Boolean   @default(false) @map("es_correcta")
+  imagen_url   String?   @map("imagen_url")
+
+  respuestas   RespuestaUsuario[]
+
+  @@map("opciones_pregunta")
+}
+
+model IntentoExamen {
+  id           Int        @id @default(autoincrement()) @map("id")
+
+  examen_id    Int        @map("examen_id")
+  examen       Examen     @relation(fields: [examen_id], references: [id])
+
+  usuario_id   Int        @map("usuario_id")
+  usuario      Usuario    @relation(fields: [usuario_id], references: [id])
+
+  iniciado_en  DateTime   @default(now()) @map("iniciado_en")
+  terminado_en DateTime?  @map("terminado_en")
+  puntuacion   Float?     @map("puntuacion")
+
+  respuestas   RespuestaUsuario[]
+
+  @@map("intentos_examen")
+}
+
+model RespuestaUsuario {
+  id                Int              @id @default(autoincrement()) @map("id")
+
+  intento_id        Int              @map("intento_id")
+  intento           IntentoExamen    @relation(fields: [intento_id], references: [id])
+
+  pregunta_id       Int              @map("pregunta_id")
+  pregunta          Pregunta         @relation(fields: [pregunta_id], references: [id])
+
+  opcion_id         Int?             @map("opcion_id")
+  opcion            OpcionPregunta?  @relation(fields: [opcion_id], references: [id])
+
+  respuesta_texto   String?          @map("respuesta_texto")
+  respuesta_num     Float?           @map("respuesta_num")
+  es_correcta       Boolean?         @map("es_correcta")
+
+  @@map("respuestas_usuario")
 }
