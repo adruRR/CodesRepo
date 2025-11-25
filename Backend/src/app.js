@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const roleRoute = require('./routes/role.route');
+const { routerRoles } = require("./routes/rol.route");
 
 app.use(express.json());
 
@@ -8,6 +8,6 @@ app.get("/", (req, res) => {
   res.send("Hola Ingeniero!");
 });
 
-app.use('/roles', roleRoute);
+app.use("/roles", routerRoles);
 
 module.exports = app;
