@@ -49,7 +49,7 @@ model Dificultad {
 
 model Categoria {
   id            Int          @id @default(autoincrement()) @map("id")
-  nombre        String       @map("nombre")
+  nombre        String       @unique  @map("nombre")
   edad_min      Int          @map("edad_min")
   edad_max      Int          @map("edad_max")
 
