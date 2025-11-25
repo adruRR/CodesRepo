@@ -1,5 +1,5 @@
 const express = require("express");
-const routerRoles = express.Router();
+const router = express.Router();
 const {
   getRoles,
   getRolPorId,
@@ -8,10 +8,10 @@ const {
   eliminarRol,
 } = require("../controllers/rol.controller");
 
-routerRoles.get("/", getRoles);
-routerRoles.get("/:id", getRolPorId);
-routerRoles.post("/", crearRol);
-routerRoles.put("/:id", actualizarRol);
-routerRoles.delete("/:id", eliminarRol);
+router.get("/", getRoles);
+router.get("/:id", getRolPorId);
+router.post("/", crearRol);
+router.put("/:id", actualizarRol);
+router.delete("/:id", eliminarRol);
 
-module.exports = { routerRoles };
+module.exports = router;
