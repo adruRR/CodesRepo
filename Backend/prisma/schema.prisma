@@ -10,6 +10,7 @@ datasource db {
 model Rol {
   id       Int       @id @default(autoincrement()) @map("id")
   nombre   String    @unique @map("nombre")
+
   usuarios Usuario[]
 
   @@map("roles")
@@ -34,6 +35,7 @@ model Usuario {
 model Ciclo {
   id       Int      @id @default(autoincrement()) @map("id")
   nombre   String   @map("nombre")
+
   examenes Examen[]
 
   @@map("ciclos")
@@ -61,6 +63,28 @@ model Categoria {
   @@map("categorias")
 }
 
+model Area {
+  id            Int          @id @default(autoincrement()) @map("id")
+  nombre        String       @unique  @map("nombre")
+
+  sub_areas SubArea[]
+
+  @@map("areas")
+}
+
+model SubArea {
+  id            Int          @id @default(autoincrement()) @map("id")
+  nombre        String       @unique  @map("nombre")
+
+  area_id  Int @map("area_id")
+  area     Area @relation(fields: [area_id], references: [id])
+
+  examenes Examen[]
+
+  @@map("sub_areas")
+}
+
+
 model Examen {
   id           Int          @id @default(autoincrement()) @map("id")
   titulo       String       @map("titulo")
@@ -71,6 +95,9 @@ model Examen {
 
   ciclo_id     Int?         @map("ciclo_id")
   ciclo        Ciclo?       @relation(fields: [ciclo_id], references: [id])
+
+  sub_area_id     Int?         @map("sub_area_id")
+  sub_area       SubArea?       @relation(fields: [sub_area_id], references: [id])
 
   preguntas    Pregunta[]
   intentos     IntentoExamen[]
@@ -92,7 +119,6 @@ model Pregunta {
 
   titulo        String    @map("titulo")
   tipo          String    @map("tipo")        // multiple, texto_corto, numerica, imagen, audio
-  dificultad    String    @map("dificultad")  // facil, medio, dificil
   estado        String    @map("estado")      // borrador, editando, publicado
 
   explicacion   String?   @map("explicacion")
